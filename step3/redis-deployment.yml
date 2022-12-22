@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: redis
+        image: redis
+        imagePullPolicy: Never
+        # env:
+        # - name: MYSQL_ROOT_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: project-secrets
+        #       key: db_root_password
+        ports:
+        - containerPort: 6379
+          name: redis-port
+        volumeMounts:
+          - name: redis-volume
+            mountPath: /var/lib/mysql
+      volumes:
+        - name: redis-volume
+          persistentVolumeClaim:
+            claimName: redis-volume
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: db
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: db
+  type: LoadBalancer
